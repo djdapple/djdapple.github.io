@@ -18,8 +18,8 @@ p {
   opacity: 0.8;
 }
 
-.smoke {
-  background: url('https://media.giphy.com/media/l0MYyDa8KOWkB4aIo/giphy.gif') no-repeat center center;
+  .smoke {
+  background: url('https://upload.wikimedia.org/wikipedia/commons/5/5f/Smoke_black_background.jpg') no-repeat center center;
   background-size: cover;
   opacity: 0.2;
   position: fixed;
