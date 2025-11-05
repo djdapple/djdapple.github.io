@@ -7,7 +7,14 @@ body {
   padding: 0;
 }
 
-h1 {.typewriter {
+h1 {
+  font-size: 3em;
+  margin-top: 100px;
+  text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99;
+}
+
+/* ✅ Typewriter effect */
+.typewriter {
   display: inline-block;
   overflow: hidden;
   border-right: .15em solid #00ff99;
@@ -27,17 +34,14 @@ h1 {.typewriter {
   from, to { border-color: transparent }
   50% { border-color: #00ff99; }
 }
-  font-size: 3em;
-  margin-top: 100px;
-  text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99;
-}
 
 p {
   font-size: 1.2em;
   opacity: 0.8;
 }
 
-  .smoke {
+/* ✅ Subtle smoke background */
+.smoke {
   background: url('https://upload.wikimedia.org/wikipedia/commons/5/5f/Smoke_black_background.jpg') no-repeat center center;
   background-size: cover;
   opacity: 0.2;
