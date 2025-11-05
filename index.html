@@ -50,7 +50,18 @@
     <h1 class="typewriter">Welcome to DRILLIONS</h1>
     <p>Precision. Power. Progress.</p>
   </div>
+<section class="comments">
+  <h2>Leave a Comment</h2>
+  <form class="comment-form">
+    <input type="text" placeholder="Your name" required>
+    <textarea placeholder="Write your message..." required></textarea>
+    <button type="submit">Post</button>
+  </form>
 
+  <div class="comment-list">
+    <p>No comments yet... Be the first to drop your thoughts 💬</p>
+  </div>
+</section>
   <script>
     const canvas = document.getElementById("matrix");
     const ctx = canvas.getContext("2d");
