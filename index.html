@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jones Enterprises</title>
   <style>
-    body {
+    body {<canvas id="matrix"></canvas>
       margin: 0;
       height: 100vh;
       display: flex;
@@ -98,6 +98,43 @@
     <h1>Welcome to DRILLIONS</h1>
     <link rel="stylesheet" href="style.css">
     <p>Precision. Power. Progress.</p>
-  </div>
+  </div><script>
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+// make canvas full screen
+canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+
+// matrix characters – you can change them!
+const letters = "DRILLIONS 0101010101 MATRIX $$$ %&&#".split("");
+
+const fontSize = 16;
+const columns = canvas.width / fontSize;
+
+// an array of drops — one per column
+const drops = Array(Math.floor(columns)).fill(1);
+
+function draw() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#00ff99"; // text color
+  ctx.font = fontSize + "px monospace";
+
+  for (let i = 0; i < drops.length; i++) {
+    const text = letters[Math.floor(Math.random() * letters.length)];
+    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+      drops[i] = 0;
+    }
+
+    drops[i]++;
+  }
+}
+
+setInterval(draw, 33);
+</script>
 </body>
 </html>
