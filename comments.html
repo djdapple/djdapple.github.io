@@ -166,27 +166,56 @@
                        <p style="color:#ccffcc;">${text}</p>`;
       list.prepend(div);
     }
+  </script  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
+      authDomain: "drillionscomments.firebaseapp.com",
+      projectId: "drillionscomments",
+      storageBucket: "drillionscomments.firebasestorage.app",
+      messagingSenderId: "1007277277571",
+      appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
+      measurementId: "G-BJJ9LJ1MB7"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Comment system hooked to Firebase
+    const form = document.querySelector('.comment-form');
+    const list = document.querySelector('.comment-list');
+
+    async function loadComments() {
+      list.innerHTML = "";
+      const snapshot = await getDocs(collection(db, "comments"));
+      snapshot.forEach(doc => {
+        const c = doc.data();
+        const div = document.createElement('div');
+        div.classList.add('comment');
+        div.innerHTML = `<strong style="color:#00ffaa;">${c.name}</strong>
+                         <p style="color:#ccffcc;">${c.text}</p>`;
+        list.prepend(div);
+      });
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = form.querySelector('input').value.trim();
+      const text = form.querySelector('textarea').value.trim();
+      if (!name || !text) return alert("Please enter both name and comment.");
+      await addDoc(collection(db, "comments"), { name, text });
+      form.reset();
+      loadComments();
+    });
+
+    loadComments();
   </script>
-  // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
-  authDomain: "drillionscomments.firebaseapp.com",
-  projectId: "drillionscomments",
-  storageBucket: "drillionscomments.firebasestorage.app",
-  messagingSenderId: "1007277277571",
-  appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
-  measurementId: "G-BJJ9LJ1MB7"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+</body>
+</html>
 </body>
 </html>
