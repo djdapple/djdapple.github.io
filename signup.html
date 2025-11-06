@@ -1,110 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔐 Drillions Login / Signup</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔒 Drillions Access Gate</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Orbitron', sans-serif;
-      background-color: black;
+      background: black;
       color: #00ff99;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      flex-direction: column;
     }
 
-    .auth-box {
-      width: 350px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 30px #00ff99;
-      text-align: center;
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
     }
 
-    h2 {
-      text-shadow: 0 0 20px #00ff99;
+    h1 {
+      font-size: 2.5em;
+      text-shadow: 0 0 15px #00ff99;
       margin-bottom: 20px;
+      letter-spacing: 2px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid #00ff99;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 30px #00ff99;
     }
 
     input {
-      width: 100%;
-      margin-bottom: 15px;
-      padding: 10px;
-      border: 1px solid #00ff99;
-      border-radius: 5px;
       background: rgba(0, 0, 0, 0.7);
+      border: 1px solid #00ff99;
       color: #00ff99;
+      padding: 10px;
       font-size: 1em;
+      border-radius: 5px;
+      text-align: center;
     }
 
     button {
-      width: 100%;
-      padding: 10px;
-      font-weight: bold;
-      color: black;
       background: #00ff99;
       border: none;
-      border-radius: 5px;
+      color: black;
+      font-weight: bold;
+      padding: 10px;
       cursor: pointer;
+      border-radius: 5px;
       transition: all 0.3s ease;
     }
 
     button:hover {
       background: #00ffaa;
-      box-shadow: 0 0 15px #00ff99;
+      box-shadow: 0 0 20px #00ff99;
     }
 
     p {
-      margin-top: 15px;
+      margin-top: 20px;
       font-size: 0.9em;
-    }
-
-    a {
-      color: #00ffaa;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
+      opacity: 0.8;
     }
   </style>
 </head>
 <body>
-  <div class="auth-box">
-    <h2>🔐 Drillions Access</h2>
+  <canvas id="matrix"></canvas>
 
-    <div id="signupForm">
-      <input type="text" id="username" placeholder="@username" required>
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button id="signupBtn">Sign Up</button>
-      <p>Already have an account? <a id="showLogin">Login</a></p>
-    </div>
+  <h1>ACCESS REQUIRED</h1>
+  <form id="signupForm">
+    <input type="text" id="username" placeholder="@username" required />
+    <input type="password" id="password" placeholder="password" required />
+    <button type="submit">ENTER THE NETWORK</button>
+  </form>
+  <p id="status"></p>
 
-    <div id="loginForm" style="display:none;">
-      <input type="email" id="loginEmail" placeholder="Email" required>
-      <input type="password" id="loginPassword" placeholder="Password" required>
-      <button id="loginBtn">Login</button>
-      <p>Need an account? <a id="showSignup">Sign Up</a></p>
-    </div>
-  </div>
+  <script>
+    // Matrix rain background
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    const letters = "DRILLIONS_0101010101";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
 
+    function draw() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#00ff99";
+      ctx.font = fontSize + "px monospace";
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+    setInterval(draw, 35);
+  </script>
+
+  <!-- Firebase Authentication -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
       getAuth,
       createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      updateProfile,
-      onAuthStateChanged
+      signInWithEmailAndPassword
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    // 🔥 Firebase Config (same as your comments page)
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
       authDomain: "drillionscomments.firebaseapp.com",
@@ -114,56 +132,33 @@
       appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
       measurementId: "G-BJJ9LJ1MB7"
     };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Redirect if already logged in
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.location.href = "comments.html";
-      }
-    });
+    const form = document.getElementById("signupForm");
+    const status = document.getElementById("status");
 
-    // --- Signup ---
-    document.getElementById("signupBtn").addEventListener("click", async () => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
       const username = document.getElementById("username").value.trim();
-      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
+      const fakeEmail = username.replace("@", "") + "@drillions.io"; // Trick Firebase (needs email format)
 
-      if (!username || !email || !password) return alert("Please fill in all fields.");
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: username.replace('@', '') });
-        alert("Account created! Redirecting...");
-        window.location.href = "comments.html";
+        await signInWithEmailAndPassword(auth, fakeEmail, password);
+        status.textContent = "✅ Access granted. Redirecting...";
+        setTimeout(() => window.location.href = "comments.html", 1500);
       } catch (error) {
-        alert("Signup failed: " + error.message);
+        try {
+          await createUserWithEmailAndPassword(auth, fakeEmail, password);
+          status.textContent = "🆕 Account created. Redirecting...";
+          setTimeout(() => window.location.href = "comments.html", 1500);
+        } catch (err) {
+          status.textContent = "❌ Access denied. Try again.";
+        }
       }
     });
-
-    // --- Login ---
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
-      if (!email || !password) return alert("Please fill in both fields.");
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        alert("Welcome back!");
-        window.location.href = "comments.html";
-      } catch (error) {
-        alert("Login failed: " + error.message);
-      }
-    });
-
-    // Toggle between forms
-    document.getElementById("showLogin").onclick = () => {
-      document.getElementById("signupForm").style.display = "none";
-      document.getElementById("loginForm").style.display = "block";
-    };
-    document.getElementById("showSignup").onclick = () => {
-      document.getElementById("loginForm").style.display = "none";
-      document.getElementById("signupForm").style.display = "block";
-    };
   </script>
 </body>
 </html>
