@@ -1,224 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Drillions Allum</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Drillions Allum — Social</title>
+  <meta name="theme-color" content="#000000" />
   <style>
-    body {
-      margin: 0;
-      background: black;
-      color: #00ff99;
-      font-family: 'Orbitron', sans-serif;
-      overflow: hidden;
-      display: flex;
-      height: 100vh;
+    :root{
+      --neon:#00ff99;
+      --neon-weak:rgba(0,255,153,0.18);
+      --bg:#000;
+      --panel: rgba(0,0,0,0.7);
+      --glass: rgba(255,255,255,0.02);
+      --max-width:1100px;
     }
-
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: -1;
-    }
-
-    .sidebar {
-      width: 250px;
-      border-right: 1px solid #00ff99;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background: rgba(0, 0, 0, 0.6);
-    }
-
-    .user-info {
-      font-size: 0.9em;
-      border-bottom: 1px solid #00ff99;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-    }
-
-    #logout {
-      background: #00ff99;
-      color: black;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    .feed {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .message {
-      background: rgba(0, 255, 153, 0.05);
-      border: 1px solid rgba(0, 255, 153, 0.2);
-      border-radius: 5px;
-      padding: 10px;
-      margin-bottom: 10px;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .message strong {
-      color: #00ffaa;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .input-area {
-      display: flex;
-      border-top: 1px solid #00ff99;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-    }
-
-    .input-area input {
-      flex: 1;
-      background: rgba(0, 0, 0, 0.8);
-      border: 1px solid #00ff99;
-      color: #00ff99;
-      border-radius: 5px;
-      padding: 10px;
-      outline: none;
-    }
-
-    .input-area button {
-      margin-left: 10px;
-      background: #00ff99;
-      color: black;
-      border: none;
-      border-radius: 5px;
-      padding: 10px 15px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .input-area button:hover {
-      background: #00ffaa;
-      box-shadow: 0 0 15px #00ff99;
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--neon);font-family:Orbitron,monospace}
+    /* layout */
+    .wrap{max-width:var(--max-width);margin:0 auto;display:grid;grid-template-columns:260px 1fr;gap:12px;height:100vh;padding:18px;box-sizing:border-box}
+    .sidebar{background:var(--panel);padding:14px;border-radius:10px;border:1px solid rgba(0,255,153,0.08);display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+    .main{display:flex;flex-direction:column;gap:12px;min-height:0}
+    header{font-weight:700;padding:6px 0;border-bottom:2px solid var(--neon);text-align:center}
+    .user{font-size:0.95rem;opacity:0.95;margin-bottom:8px}
+    .feed{background:linear-gradient(180deg, transparent, rgba(0,0,0,0.25));padding:12px;border-radius:8px;overflow:auto;flex:1;border:1px solid rgba(0,255,153,0.04)}
+    .msg{padding:10px;border-bottom:1px solid var(--neon-weak);display:block}
+    .msg .who{color:var(--neon);font-weight:700}
+    .meta{font-size:0.75rem;color:rgba(255,255,255,0.45);margin-left:8px}
+    .controls{margin-top:6px}
+    .controls button{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--neon);padding:6px;margin-right:6px;border-radius:6px;font-size:0.78rem;cursor:pointer}
+    .controls button:hover{box-shadow:0 0 8px rgba(0,255,153,0.12);transform:translateY(-1px)}
+    .composer{display:flex;gap:8px;align-items:center;border-top:2px solid rgba(0,255,153,0.08);padding-top:10px}
+    .composer input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(0,255,153,0.08);background:transparent;color:var(--neon);outline:none}
+    .composer button{background:var(--neon);color:#000;border:none;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+    .composer button:active{transform:translateY(1px)}
+    /* matrix canvas behind everything */
+    canvas{position:fixed;left:0;top:0;z-index:-1;width:100vw;height:100vh;display:block}
+    /* transitions */
+    .fade-in{opacity:0;transform:translateY(6px);transition:opacity .5s ease, transform .35s ease}
+    .fade-in.visible{opacity:1;transform:none}
+    /* small screens: single column, composer sticky bottom */
+    @media (max-width:860px){
+      .wrap{grid-template-columns:1fr;padding:12px;height:100vh}
+      .sidebar{order:2;display:flex;flex-direction:row;align-items:center;gap:10px}
+      .main{order:1}
+      .composer{position:sticky;bottom:0;background:linear-gradient(#000, rgba(0,0,0,0.2));padding:10px;border-radius:0;margin:-6px -6px 0}
     }
   </style>
 </head>
 <body>
   <canvas id="matrix"></canvas>
 
-  <div class="sidebar">
-    <div>
-      <div class="user-info" id="userInfo">Loading user...</div>
-      <h3>Allum Feed</h3>
-      <p style="opacity:0.7;">Where minds sync in code 🧠</p>
-    </div>
-    <button id="logout">Logout</button>
+  <div class="wrap fade-in" id="app">
+    <aside class="sidebar">
+      <div>
+        <header>💬 Drillions Lounge — Allum</header>
+        <div class="user" id="userInfo">loading...</div>
+        <div style="font-size:.9rem;color:rgba(255,255,255,0.6)">Live feed • persistent comments • replies & DMs next</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button id="openSecret" style="background:transparent;color:var(--neon);border:1px solid rgba(0,255,153,0.06);padding:8px;border-radius:8px;cursor:pointer">Secret Board</button>
+        <button id="logout" style="background:var(--neon);color:#000;border:none;padding:10px;border-radius:8px;cursor:pointer">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="feed" class="feed" aria-live="polite"></section>
+
+      <div class="composer" role="region" aria-label="Send message">
+        <input id="messageInput" placeholder="Transmit your thought..." autocomplete="off" />
+        <button id="sendBtn">SEND</button>
+      </div>
+    </main>
   </div>
 
-  <div class="feed" id="feed"></div>
-
-  <div class="input-area">
-    <input type="text" id="messageInput" placeholder="Transmit your thought..." />
-    <button id="sendBtn">Send</button>
-  </div>
-
-  <!-- Matrix background -->
-  <script>
-    const canvas = document.getElementById("matrix");
-    const ctx = canvas.getContext("2d");
-    canvas.height = window.innerHeight;
-    canvas.width = window.innerWidth;
-    const letters = "DRILLIONS0101010101";
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
-    function draw() {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#00ff99";
-      ctx.font = fontSize + "px monospace";
-      for (let i = 0; i < drops.length; i++) {
-        const text = letters.charAt(Math.floor(Math.random() * letters.length));
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-      }
-    }
-    setInterval(draw, 35);
-  </script>
-
-  <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { 
-      getAuth, onAuthStateChanged, signOut 
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import {
-      getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  // MATRIX: requestAnimationFrame + resize throttle for better mobile perf
+  const canvas = document.getElementById('matrix'), ctx = canvas.getContext('2d');
+  let width=innerWidth, height=innerHeight;
+  const setSize=()=>{ width=canvas.width=innerWidth; height=canvas.height=innerHeight; cols=Math.floor(width/16); if(!drops || drops.length!==cols) drops=new Array(cols).fill(1) };
+  window.addEventListener('resize', debounce(setSize,120));
+  let drops = []; setSize();
+  const letters = "DRILLIONS0101010";
+  const fontSize = 16;
+  ctx.font = fontSize + "px monospace";
+  function frame(){
+    ctx.fillStyle = "rgba(0,0,0,0.06)";
+    ctx.fillRect(0,0,width,height);
+    ctx.fillStyle = "#00ff99";
+    for(let i=0;i<drops.length;i++){
+      const text = letters.charAt(Math.floor(Math.random()*letters.length));
+      ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+      if(drops[i]*fontSize > height && Math.random()>0.975) drops[i]=0;
+      drops[i]++;
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  let raf = requestAnimationFrame(frame);
+  function debounce(fn,t){let id; return function(){clearTimeout(id); id=setTimeout(fn,t)}}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
-      authDomain: "drillionscomments.firebaseapp.com",
-      projectId: "drillionscomments",
-      storageBucket: "drillionscomments.firebasestorage.app",
-      messagingSenderId: "1007277277571",
-      appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
-      measurementId: "G-BJJ9LJ1MB7"
+  // FIREBASE + UI logic
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const cfg = {
+    apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
+    authDomain: "drillionscomments.firebaseapp.com",
+    projectId: "drillionscomments",
+    storageBucket: "drillionscomments.firebasestorage.app",
+    messagingSenderId: "1007277277571",
+    appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
+    measurementId: "G-BJJ9LJ1MB7"
+  };
+  const app = initializeApp(cfg);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // UI refs
+  const feed = document.getElementById('feed');
+  const input = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const logoutBtn = document.getElementById('logout');
+  const userInfo = document.getElementById('userInfo');
+  const appWrap = document.getElementById('app');
+
+  // helper: escape text for HTML
+  function esc(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]) }
+
+  // show app after small delay for smoothness
+  function showApp(){ appWrap.classList.add('visible') }
+
+  // auth guard + realtime
+  onAuthStateChanged(auth, user=>{
+    if(!user){ location.href='index.html'; return }
+    const username = user.displayName || user.email.split('@')[0];
+    userInfo.innerHTML = `Signed in as <strong>@${esc(username)}</strong>`;
+    showApp();
+
+    // live listener: latest 200 messages, newest last
+    const q = query(collection(db,'posts'), orderBy('timestamp','asc'));
+    const unsub = onSnapshot(q, snap=>{
+      // efficient rebuild: create fragment
+      const frag = document.createDocumentFragment();
+      snap.forEach(docSnap=>{
+        const d=docSnap.data();
+        const id = docSnap.id;
+        const row = document.createElement('div');
+        row.className='msg';
+        const isOwner = d.uid === user.uid;
+        const isAdmin = user.email === 'dejuanj35@gmail.com';
+        row.innerHTML = `
+          <div><span class="who">@${esc(d.user)}</span>
+          <span class="meta">${d.timestamp?.toDate ? new Date(d.timestamp.toDate()).toLocaleString() : ''}</span></div>
+          <div style="margin-top:6px">${esc(d.text)}</div>
+        `;
+        if(isOwner || isAdmin){
+          const controls = document.createElement('div');
+          controls.className='controls';
+          const edit = document.createElement('button'); edit.textContent='Edit';
+          const del = document.createElement('button'); del.textContent='Delete';
+          edit.onclick = async ()=> {
+            const val = prompt('Edit your message', d.text);
+            if(val && val.trim()!=='' ) await updateDoc(doc(db,'posts',id), { text: val });
+          };
+          del.onclick = async ()=> {
+            if(confirm('Delete message?')) await deleteDoc(doc(db,'posts',id));
+          };
+          controls.appendChild(edit); controls.appendChild(del);
+          row.appendChild(controls);
+        }
+        frag.appendChild(row);
+      });
+      // replace feed children
+      feed.innerHTML = '';
+      feed.appendChild(frag);
+      feed.scrollTop = feed.scrollHeight;
+    });
+
+    // send
+    sendBtn.onclick = async ()=>{
+      const val = input.value.trim();
+      if(!val) return;
+      await addDoc(collection(db,'posts'), {
+        uid: user.uid,
+        user: username,
+        text: val,
+        timestamp: serverTimestamp()
+      });
+      input.value='';
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    logoutBtn.onclick = async ()=>{ await signOut(auth); location.href='index.html' };
+  });
 
-    const feed = document.getElementById("feed");
-    const input = document.getElementById("messageInput");
-    const sendBtn = document.getElementById("sendBtn");
-    const logoutBtn = document.getElementById("logout");
-    const userInfo = document.getElementById("userInfo");
+  // keyboard send (Enter) — mobile friendly: shift+enter for newline
+  input.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendBtn.click(); }
+  });
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "index.html";
-        return;
-      }
-
-      userInfo.innerHTML = `Signed in as <strong>@${user.email.split('@')[0]}</strong>`;
-      const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-
-      onSnapshot(q, (snapshot) => {
-        feed.innerHTML = "";
-        snapshot.forEach((doc) => {
-          const d = doc.data();
-          const msg = document.createElement("div");
-          msg.classList.add("message");
-          msg.innerHTML = `<strong>@${d.user}</strong> <span style="opacity:0.6;">${new Date(d.timestamp?.seconds * 1000).toLocaleTimeString()}</span>
-                           <p>${d.text}</p>`;
-          feed.appendChild(msg);
-        });
-      });
-
-      sendBtn.onclick = async () => {
-        const text = input.value.trim();
-        if (!text) return;
-        await addDoc(collection(db, "posts"), {
-          user: user.email.split('@')[0],
-          text,
-          timestamp: serverTimestamp()
-        });
-        input.value = "";
-      };
-
-      logoutBtn.onclick = async () => {
-        await signOut(auth);
-        window.location.href = "index.html";
-      };
-    });
+  // graceful fade-in
+  document.addEventListener('DOMContentLoaded', ()=> setTimeout(()=>appWrap.classList.add('visible'),120));
   </script>
 </body>
 </html>
