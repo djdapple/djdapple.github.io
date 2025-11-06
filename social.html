@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💬 Drillions Lounge</title>
+  <style>
+    body {
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background: #111;
+      border-bottom: 2px solid #00ff88;
+      padding: 15px;
+      text-align: center;
+      color: #00ff88;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    #chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: scroll;
+      padding: 20px;
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      background: rgba(255,255,255,0.05);
+      border-left: 3px solid #00ff88;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .username {
+      color: #00ffaa;
+      font-weight: bold;
+    }
+
+    .timestamp {
+      font-size: 0.8em;
+      color: #888;
+      margin-left: 10px;
+    }
+
+    .reply {
+      color: #00ffaa;
+      cursor: pointer;
+      font-size: 0.85em;
+      margin-top: 5px;
+      display: inline-block;
+    }
+
+    #message-input {
+      display: flex;
+      border-top: 2px solid #00ff88;
+    }
+
+    #message {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      outline: none;
+      background: #111;
+      color: #fff;
+      font-size: 1em;
+    }
+
+    #send {
+      background: #00ff88;
+      border: none;
+      color: #111;
+      padding: 0 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    #send:hover {
+      background: #00ffaa;
+      box-shadow: 0 0 10px #00ffaa;
+    }
+  </style>
+</head>
+<body>
+  <header>💬 Drillions Lounge — Speak Freely</header>
+
+  <div id="chat-container"></div>
+
+  <div id="message-input">
+    <input type="text" id="message" placeholder="Send a message..." />
+    <button id="send">Send</button>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
+      authDomain: "drillionscomments.firebaseapp.com",
+      projectId: "drillionscomments",
+      storageBucket: "drillionscomments.firebasestorage.app",
+      messagingSenderId: "1007277277571",
+      appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
+      measurementId: "G-BJJ9LJ1MB7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const chatContainer = document.getElementById("chat-container");
+    const messageInput = document.getElementById("message");
+    const sendButton = document.getElementById("send");
+
+    let currentUser = null;
+
+    // Auth check
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        loadMessages();
+      } else {
+        window.location.href = "signup.html";
+      }
+    });
+
+    // Load messages live
+    function loadMessages() {
+      const q = query(collection(db, "comments"), orderBy("timestamp"));
+      onSnapshot(q, (snapshot) => {
+        chatContainer.innerHTML = "";
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const msg = document.createElement("div");
+          msg.classList.add("message");
+          msg.innerHTML = `
+            <div class="username">@${data.username}</div>
+            <div>${data.text}</div>
+            <div class="timestamp">${new Date(data.timestamp?.toDate()).toLocaleTimeString()}</div>
+          `;
+          chatContainer.appendChild(msg);
+        });
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      });
+    }
+
+    // Send message
+    sendButton.addEventListener("click", async () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      await addDoc(collection(db, "comments"), {
+        username: currentUser.email.split("@")[0],
+        text,
+        timestamp: serverTimestamp()
+      });
+      messageInput.value = "";
+    });
+  </script>
+</body>
+</html>
