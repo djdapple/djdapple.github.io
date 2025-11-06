@@ -212,6 +212,88 @@
       form.reset();
       loadComments();
     });
-  </script>
+  </script<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  // --- Firebase setup ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
+    authDomain: "drillionscomments.firebaseapp.com",
+    projectId: "drillionscomments",
+    storageBucket: "drillionscomments.firebasestorage.app",
+    messagingSenderId: "1007277277571",
+    appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
+    measurementId: "G-BJJ9LJ1MB7"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // --- Elements ---
+  const form = document.querySelector(".comment-form");
+  const list = document.querySelector(".comment-list");
+
+  // --- Require login ---
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      alert("Please log in first!");
+      window.location.href = "signup.html";
+      return;
+    }
+
+    // Show user info
+    const username = user.displayName || user.email;
+    const heading = document.createElement("p");
+    heading.innerHTML = `Signed in as <strong>@${username}</strong> — <a id="logout" style="color:#00ffaa;cursor:pointer;">Logout</a>`;
+    document.querySelector(".container").prepend(heading);
+
+    // Load comments
+    const snapshot = await getDocs(collection(db, "comments"));
+    snapshot.forEach((doc) => {
+      const { name, text, date } = doc.data();
+      addComment({ name, text, date });
+    });
+
+    // Handle new comment
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = form.querySelector("textarea").value.trim();
+      if (!text) return;
+      const comment = { name: username, text, date: new Date().toLocaleString() };
+      await addDoc(collection(db, "comments"), comment);
+      addComment(comment);
+      form.reset();
+    });
+
+    // Logout
+    document.getElementById("logout").onclick = async () => {
+      await signOut(auth);
+      window.location.href = "signup.html";
+    };
+  });
+
+  // --- Add comment to list ---
+  function addComment({ name, text, date }) {
+    const p = list.querySelector("p");
+    if (p) p.remove();
+    const div = document.createElement("div");
+    div.classList.add("comment");
+    div.innerHTML = `<strong style="color:#00ffaa;">@${name}</strong>
+                     <span style="font-size:0.8em;opacity:0.6;">(${date})</span>
+                     <p style="color:#ccffcc;">${text}</p>`;
+    list.prepend(div);
+  }
+</script>
 </body>
 </html>
