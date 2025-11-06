@@ -100,9 +100,9 @@
 
   <div class="container">
     <h1>💬 Community Comments</h1>
+    <p id="userStatus"></p>
 
     <form class="comment-form" id="commentForm">
-      <input type="text" id="name" placeholder="@username" required />
       <textarea id="message" placeholder="Write a message..." rows="4" required></textarea>
       <button type="submit">Post</button>
     </form>
@@ -114,7 +114,7 @@
     <a href="index.html" class="back">⬅ Back to Home</a>
   </div>
 
-  <!-- Matrix animation background -->
+  <!-- Matrix animation -->
   <script>
     const canvas = document.getElementById("matrix");
     const ctx = canvas.getContext("2d");
@@ -124,7 +124,6 @@
     const fontSize = 16;
     const columns = canvas.width / fontSize;
     const drops = Array(Math.floor(columns)).fill(1);
-
     function draw() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -143,10 +142,15 @@
   <!-- Firebase + EmailJS -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, getDocs, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import emailjs from "https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js";
 
-    // 🔥 Firebase Config
+    // --- Firebase Config ---
     const firebaseConfig = {
       apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
       authDomain: "drillionscomments.firebaseapp.com",
@@ -156,144 +160,72 @@
       appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
       measurementId: "G-BJJ9LJ1MB7"
     };
-
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
+    emailjs.init("tQNU59GDnwGOhU548");
 
-    // 💌 EmailJS Setup
-    emailjs.init("tQNU59GDnwGOhU548"); // your public key
-
+    const userStatus = document.getElementById("userStatus");
     const form = document.getElementById("commentForm");
     const list = document.getElementById("commentList");
 
-    // Load comments
+    // --- Require login ---
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("Please log in to view or post comments.");
+        window.location.href = "signup.html";
+        return;
+      }
+
+      const username = user.displayName || user.email.split("@")[0];
+      userStatus.innerHTML = `Signed in as <strong>@${username}</strong> — <a id="logout" style="color:#00ffaa;cursor:pointer;">Logout</a>`;
+
+      document.getElementById("logout").onclick = async () => {
+        await signOut(auth);
+        window.location.href = "signup.html";
+      };
+
+      loadComments();
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const message = document.getElementById("message").value.trim();
+        if (!message) return;
+
+        await addDoc(collection(db, "comments"), {
+          name: username,
+          message,
+          date: serverTimestamp()
+        });
+
+        // Email notification
+        emailjs.send("service_iwdyo6o", "template_3tbnvm8", {
+          from_name: username,
+          comment_text: message
+        });
+
+        form.reset();
+        loadComments();
+      });
+    });
+
     async function loadComments() {
       list.innerHTML = "";
       const snapshot = await getDocs(collection(db, "comments"));
       if (snapshot.empty) {
         list.innerHTML = "<p>No comments yet. Be the first!</p>";
+        return;
       }
       snapshot.forEach(doc => {
         const c = doc.data();
         const div = document.createElement("div");
         div.className = "comment";
-        div.innerHTML = `<strong style="color:#00ffaa;">${c.name}</strong>
-                         <span style="font-size:0.8em;opacity:0.6;"> (${new Date(c.date?.seconds * 1000).toLocaleString()})</span>
+        div.innerHTML = `<strong style="color:#00ffaa;">@${c.name}</strong>
+                         <span style="font-size:0.8em;opacity:0.6;"> (${c.date?.seconds ? new Date(c.date.seconds * 1000).toLocaleString() : ""})</span>
                          <p style="color:#ccffcc;">${c.message}</p>`;
         list.prepend(div);
       });
     }
-
-    loadComments();
-
-    // Post comment
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("name").value.trim();
-      const message = document.getElementById("message").value.trim();
-      if (!name || !message) return alert("Please fill out all fields.");
-
-      await addDoc(collection(db, "comments"), {
-        name,
-        message,
-        date: serverTimestamp()
-      });
-
-      // Send email through EmailJS
-      emailjs.send("service_iwdyo6o", "template_3tbnvm8", {
-        from_name: name,
-        comment_text: message
-      }).then(() => {
-        console.log("Email sent!");
-      }).catch((error) => {
-        console.error("Email failed:", error);
-      });
-
-      form.reset();
-      loadComments();
-    });
-  </script<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  // --- Firebase setup ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
-    authDomain: "drillionscomments.firebaseapp.com",
-    projectId: "drillionscomments",
-    storageBucket: "drillionscomments.firebasestorage.app",
-    messagingSenderId: "1007277277571",
-    appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
-    measurementId: "G-BJJ9LJ1MB7"
-  };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  // --- Elements ---
-  const form = document.querySelector(".comment-form");
-  const list = document.querySelector(".comment-list");
-
-  // --- Require login ---
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      alert("Please log in first!");
-      window.location.href = "signup.html";
-      return;
-    }
-
-    // Show user info
-    const username = user.displayName || user.email;
-    const heading = document.createElement("p");
-    heading.innerHTML = `Signed in as <strong>@${username}</strong> — <a id="logout" style="color:#00ffaa;cursor:pointer;">Logout</a>`;
-    document.querySelector(".container").prepend(heading);
-
-    // Load comments
-    const snapshot = await getDocs(collection(db, "comments"));
-    snapshot.forEach((doc) => {
-      const { name, text, date } = doc.data();
-      addComment({ name, text, date });
-    });
-
-    // Handle new comment
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const text = form.querySelector("textarea").value.trim();
-      if (!text) return;
-      const comment = { name: username, text, date: new Date().toLocaleString() };
-      await addDoc(collection(db, "comments"), comment);
-      addComment(comment);
-      form.reset();
-    });
-
-    // Logout
-    document.getElementById("logout").onclick = async () => {
-      await signOut(auth);
-      window.location.href = "signup.html";
-    };
-  });
-
-  // --- Add comment to list ---
-  function addComment({ name, text, date }) {
-    const p = list.querySelector("p");
-    if (p) p.remove();
-    const div = document.createElement("div");
-    div.classList.add("comment");
-    div.innerHTML = `<strong style="color:#00ffaa;">@${name}</strong>
-                     <span style="font-size:0.8em;opacity:0.6;">(${date})</span>
-                     <p style="color:#ccffcc;">${text}</p>`;
-    list.prepend(div);
-  }
-</script>
+  </script>
 </body>
 </html>
