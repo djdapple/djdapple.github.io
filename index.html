@@ -3,69 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <title>Drillions Matrix</title>
+  <title>Drillions</title>
   <style>
     body {
       margin: 0;
-      height: 100vh;
-      overflow: hidden;
       background: black;
       color: #00ff99;
-      font-family: "Orbitron", sans-serif;
+      font-family: 'Orbitron', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      text-align: center;
     }
 
     canvas {
-      display: block;
       position: fixed;
       top: 0;
       left: 0;
+      width: 100%;
+      height: 100%;
       z-index: -1;
-    }
-
-    .content {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      top: 40%;
-      transform: translateY(-40%);
     }
 
     h1 {
       font-size: 3em;
-      text-transform: uppercase;
       text-shadow: 0 0 20px #00ff99;
+      margin-bottom: 20px;
     }
 
-    p {
-      font-size: 1.2em;
-      color: #ccffcc;
+    .auth-box {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid #00ff99;
+      padding: 25px;
+      border-radius: 10px;
+      width: 300px;
+      box-shadow: 0 0 25px #00ff99;
+    }
+
+    input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid #00ff99;
+      color: #00ff99;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    button {
+      width: 100%;
+      background: #00ff99;
+      border: none;
+      color: black;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      background: #00ffaa;
+      box-shadow: 0 0 20px #00ff99;
+    }
+
+    .toggle {
+      margin-top: 15px;
+      font-size: 0.9em;
+      cursor: pointer;
+      color: #00ffaa;
+    }
+
+    .toggle:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <canvas id="matrix"></canvas>
 
-  <div class="content">
-    <h1 class="typewriter">Welcome to DRILLIONS</h1>
-        <p>Precision. Power. Progress.</p>
-    <p><a href="comments.html" style="color:#00ffaa;text-decoration:none;">💬 Visit the Comment Page</a></p>
+  <div>
+    <h1>💎 Drillions</h1>
+
+    <div class="auth-box" id="authBox">
+      <h3 id="formTitle">Sign In</h3>
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button id="authButton">Sign In</button>
+      <p class="toggle" id="toggleForm">Don't have an account? Sign Up</p>
+    </div>
   </div>
 
-  <script>
-    // Matrix background JavaScript here
-  </script>
-</body>
-</html>
-  </div>
-  
+  <!-- Matrix background -->
   <script>
     const canvas = document.getElementById("matrix");
     const ctx = canvas.getContext("2d");
-
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
-
     const letters = "DRILLIONS0101010101";
     const fontSize = 16;
     const columns = canvas.width / fontSize;
@@ -74,22 +112,81 @@
     function draw() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       ctx.fillStyle = "#00ff99";
       ctx.font = fontSize + "px monospace";
-
       for (let i = 0; i < drops.length; i++) {
         const text = letters.charAt(Math.floor(Math.random() * letters.length));
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
-          drops[i] = 0;
-
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
       }
     }
-
     setInterval(draw, 35);
+  </script>
+
+  <!-- Firebase Auth -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword,
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
+      authDomain: "drillionscomments.firebaseapp.com",
+      projectId: "drillionscomments",
+      storageBucket: "drillionscomments.firebasestorage.app",
+      messagingSenderId: "1007277277571",
+      appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
+      measurementId: "G-BJJ9LJ1MB7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const emailField = document.getElementById("email");
+    const passField = document.getElementById("password");
+    const authButton = document.getElementById("authButton");
+    const toggleForm = document.getElementById("toggleForm");
+    const formTitle = document.getElementById("formTitle");
+
+    let isSignUp = false;
+
+    toggleForm.addEventListener("click", () => {
+      isSignUp = !isSignUp;
+      formTitle.textContent = isSignUp ? "Sign Up" : "Sign In";
+      authButton.textContent = isSignUp ? "Sign Up" : "Sign In";
+      toggleForm.textContent = isSignUp
+        ? "Already have an account? Sign In"
+        : "Don't have an account? Sign Up";
+    });
+
+    authButton.addEventListener("click", async () => {
+      const email = emailField.value.trim();
+      const password = passField.value.trim();
+      if (!email || !password) return alert("Please fill out all fields.");
+
+      try {
+        if (isSignUp) {
+          await createUserWithEmailAndPassword(auth, email, password);
+          alert("Account created! Welcome 💎");
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    // redirect if logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "social.html";
+      }
+    });
   </script>
 </body>
 </html>
