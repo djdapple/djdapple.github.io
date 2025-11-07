@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to the Drillions Matrix</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Portal — Drillions Matrix</title>
   <style>
     :root {
       --neon: #00ff99;
@@ -12,7 +12,6 @@
 
     body {
       margin: 0;
-      height: 100vh;
       background: var(--dark);
       color: var(--neon);
       font-family: 'Orbitron', sans-serif;
@@ -20,7 +19,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
+      height: 100vh;
       text-align: center;
     }
 
@@ -33,61 +32,97 @@
       z-index: -1;
     }
 
-    h1 {
-      font-size: 2.2em;
-      letter-spacing: 2px;
+    .auth-box {
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(0,255,153,0.4);
+      padding: 30px 25px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 350px;
+      box-shadow: 0 0 20px rgba(0,255,153,0.2);
+      transition: all 0.4s ease;
+    }
+
+    .auth-box:hover {
+      box-shadow: 0 0 40px rgba(0,255,153,0.3);
+    }
+
+    h2 {
+      margin-bottom: 20px;
       text-shadow: 0 0 10px var(--neon);
-      animation: flicker 3s infinite alternate;
     }
 
-    @keyframes flicker {
-      0%, 18%, 22%, 25%, 53%, 57%, 100% {
-        text-shadow:
-          0 0 4px var(--neon),
-          0 0 10px var(--neon),
-          0 0 20px var(--neon),
-          0 0 40px #00ffaa;
-      }
-      20%, 24%, 55% {
-        text-shadow: none;
-      }
+    input {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(0,255,153,0.5);
+      color: var(--neon);
+      border-radius: 5px;
+      font-size: 1em;
+      text-align: center;
+      transition: all 0.3s;
     }
 
-    .entry-button {
-      margin-top: 30px;
-      font-size: 0.9em;
-      background: transparent;
-      border: 1px solid rgba(0,255,153,0.2);
-      color: rgba(0,255,153,0.7);
-      padding: 8px 20px;
+    input:focus {
+      border-color: var(--neon);
+      outline: none;
+      box-shadow: 0 0 10px rgba(0,255,153,0.5);
+    }
+
+    button {
+      background: var(--neon);
+      border: none;
+      color: black;
+      font-weight: bold;
+      width: 100%;
+      padding: 10px;
       border-radius: 6px;
       cursor: pointer;
-      text-transform: uppercase;
+      font-size: 1em;
+      margin-top: 10px;
       transition: all 0.3s ease;
     }
 
-    .entry-button:hover {
-      background: rgba(0,255,153,0.1);
-      color: var(--neon);
-      border-color: var(--neon);
-      box-shadow: 0 0 10px rgba(0,255,153,0.4);
+    button:hover {
+      background: #00ffaa;
+      box-shadow: 0 0 15px var(--neon);
     }
 
-    footer {
-      position: absolute;
-      bottom: 20px;
-      font-size: 0.75em;
-      color: rgba(0,255,153,0.4);
+    .toggle {
+      margin-top: 15px;
+      font-size: 0.8em;
+      color: rgba(0,255,153,0.6);
+      cursor: pointer;
+    }
+
+    a.back {
+      display: block;
+      margin-top: 25px;
+      font-size: 0.8em;
+      color: rgba(0,255,153,0.7);
+      text-decoration: none;
+    }
+
+    a.back:hover {
+      color: var(--neon);
+      text-shadow: 0 0 5px var(--neon);
     }
   </style>
 </head>
 <body>
   <canvas id="matrix"></canvas>
 
-  <h1>Welcome to the Drillions Matrix</h1>
-  <button class="entry-button" onclick="enterMatrix()">Access Portal</button>
-
-  <footer>© 2025 Drillions Allum — Enter with Focus</footer>
+  <div class="auth-box" id="authBox">
+    <h2>Access Portal</h2>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button id="loginBtn">Sign In</button>
+    <p class="toggle" onclick="toggleForm()">Need an account? Sign Up</p>
+    <a href="index.html" class="back">⬅ Return to Matrix</a>
+  </div>
 
   <script>
     // MATRIX BACKGROUND
@@ -96,7 +131,7 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const letters = "DRILLIONS MATRIX 01010101";
+    const letters = "DRILLIONS ACCESS 0101";
     const fontSize = 16;
     const columns = canvas.width / fontSize;
     const drops = Array(Math.floor(columns)).fill(1);
@@ -120,9 +155,21 @@
       canvas.height = window.innerHeight;
     });
 
-    // Redirect to login
-    function enterMatrix() {
-      window.location.href = "login.html";
+    // SIMPLE LOGIN / SIGNUP TOGGLE
+    let isSignup = false;
+    function toggleForm() {
+      const box = document.getElementById("authBox");
+      const toggleText = document.querySelector(".toggle");
+      const button = document.getElementById("loginBtn");
+      isSignup = !isSignup;
+
+      if (isSignup) {
+        button.textContent = "Create Account";
+        toggleText.textContent = "Already have an account? Sign In";
+      } else {
+        button.textContent = "Sign In";
+        toggleText.textContent = "Need an account? Sign Up";
+      }
     }
   </script>
 </body>
