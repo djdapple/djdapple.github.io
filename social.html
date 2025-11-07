@@ -8,16 +8,15 @@
   <style>
     :root{
       --neon:#00ff99;
-      --neon-weak:rgba(0,255,153,0.18);
+      --neon-weak:rgba(0,255,153,0.12);
       --bg:#000;
-      --panel: rgba(0,0,0,0.7);
-      --glass: rgba(255,255,255,0.02);
+      --panel: rgba(0,0,0,0.72);
       --max-width:1100px;
     }
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--neon);font-family:Orbitron,monospace}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--neon);font-family:Orbitron,monospace;-webkit-font-smoothing:antialiased}
     /* layout */
     .wrap{max-width:var(--max-width);margin:0 auto;display:grid;grid-template-columns:260px 1fr;gap:12px;height:100vh;padding:18px;box-sizing:border-box}
-    .sidebar{background:var(--panel);padding:14px;border-radius:10px;border:1px solid rgba(0,255,153,0.08);display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+    .sidebar{background:var(--panel);padding:14px;border-radius:10px;border:1px solid rgba(0,255,153,0.06);display:flex;flex-direction:column;justify-content:space-between;min-height:0}
     .main{display:flex;flex-direction:column;gap:12px;min-height:0}
     header{font-weight:700;padding:6px 0;border-bottom:2px solid var(--neon);text-align:center}
     .user{font-size:0.95rem;opacity:0.95;margin-bottom:8px}
@@ -31,13 +30,9 @@
     .composer{display:flex;gap:8px;align-items:center;border-top:2px solid rgba(0,255,153,0.08);padding-top:10px}
     .composer input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(0,255,153,0.08);background:transparent;color:var(--neon);outline:none}
     .composer button{background:var(--neon);color:#000;border:none;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}
-    .composer button:active{transform:translateY(1px)}
-    /* matrix canvas behind everything */
     canvas{position:fixed;left:0;top:0;z-index:-1;width:100vw;height:100vh;display:block}
-    /* transitions */
-    .fade-in{opacity:0;transform:translateY(6px);transition:opacity .5s ease, transform .35s ease}
+    .fade-in{opacity:0;transform:translateY(6px);transition:opacity .45s ease, transform .35s ease}
     .fade-in.visible{opacity:1;transform:none}
-    /* small screens: single column, composer sticky bottom */
     @media (max-width:860px){
       .wrap{grid-template-columns:1fr;padding:12px;height:100vh}
       .sidebar{order:2;display:flex;flex-direction:row;align-items:center;gap:10px}
@@ -54,7 +49,7 @@
       <div>
         <header>💬 Drillions Lounge — Allum</header>
         <div class="user" id="userInfo">loading...</div>
-        <div style="font-size:.9rem;color:rgba(255,255,255,0.6)">Live feed • persistent comments • replies & DMs next</div>
+        <div style="font-size:.9rem;color:rgba(255,255,255,0.6)">Live feed • persistent comments • DMs next</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
         <button id="openSecret" style="background:transparent;color:var(--neon);border:1px solid rgba(0,255,153,0.06);padding:8px;border-radius:8px;cursor:pointer">Secret Board</button>
@@ -73,38 +68,34 @@
   </div>
 
   <script type="module">
-  // MATRIX: requestAnimationFrame + resize throttle for better mobile perf
+  // MATRIX: requestAnimationFrame + resize handling for mobile
   const canvas = document.getElementById('matrix'), ctx = canvas.getContext('2d');
-  let width=innerWidth, height=innerHeight;
-  const setSize=()=>{ width=canvas.width=innerWidth; height=canvas.height=innerHeight; cols=Math.floor(width/16); if(!drops || drops.length!==cols) drops=new Array(cols).fill(1) };
-  window.addEventListener('resize', debounce(setSize,120));
-  let drops = []; setSize();
+  let width = innerWidth, height = innerHeight, cols = 0, drops = [];
+  function setSize(){ width = canvas.width = innerWidth; height = canvas.height = innerHeight; cols = Math.floor(width/14); drops = new Array(cols).fill(1); ctx.font = "14px monospace"; }
+  setSize(); window.addEventListener('resize', ()=>{ clearTimeout(window._rs); window._rs = setTimeout(setSize,120); });
   const letters = "DRILLIONS0101010";
-  const fontSize = 16;
-  ctx.font = fontSize + "px monospace";
   function frame(){
-    ctx.fillStyle = "rgba(0,0,0,0.06)";
+    ctx.fillStyle = "rgba(0,0,0,0.055)";
     ctx.fillRect(0,0,width,height);
     ctx.fillStyle = "#00ff99";
     for(let i=0;i<drops.length;i++){
       const text = letters.charAt(Math.floor(Math.random()*letters.length));
-      ctx.fillText(text, i*fontSize, drops[i]*fontSize);
-      if(drops[i]*fontSize > height && Math.random()>0.975) drops[i]=0;
+      ctx.fillText(text, i*14, drops[i]*14);
+      if(drops[i]*14 > height && Math.random()>0.975) drops[i]=0;
       drops[i]++;
     }
-    raf = requestAnimationFrame(frame);
+    requestAnimationFrame(frame);
   }
-  let raf = requestAnimationFrame(frame);
-  function debounce(fn,t){let id; return function(){clearTimeout(id); id=setTimeout(fn,t)}}
+  requestAnimationFrame(frame);
 
-  // FIREBASE + UI logic
+  // FIREBASE
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import {
-    getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc
+    getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc, limit
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  const cfg = {
+  const firebaseConfig = {
     apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
     authDomain: "drillionscomments.firebaseapp.com",
     projectId: "drillionscomments",
@@ -113,7 +104,8 @@
     appId: "1:1007277277571:web:343c8dd68b844ec91e76b6",
     measurementId: "G-BJJ9LJ1MB7"
   };
-  const app = initializeApp(cfg);
+
+  const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
@@ -125,44 +117,43 @@
   const userInfo = document.getElementById('userInfo');
   const appWrap = document.getElementById('app');
 
-  // helper: escape text for HTML
-  function esc(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]) }
+  function esc(s){ return String(s || '').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]) }
 
-  // show app after small delay for smoothness
+  // fade-in UI
   function showApp(){ appWrap.classList.add('visible') }
 
-  // auth guard + realtime
-  onAuthStateChanged(auth, user=>{
-    if(!user){ location.href='index.html'; return }
+  // Auth + realtime feed
+  onAuthStateChanged(auth, user => {
+    if(!user){ location.href = 'index.html'; return; }
     const username = user.displayName || user.email.split('@')[0];
     userInfo.innerHTML = `Signed in as <strong>@${esc(username)}</strong>`;
     showApp();
 
-    // live listener: latest 200 messages, newest last
-    const q = query(collection(db,'posts'), orderBy('timestamp','asc'));
-    const unsub = onSnapshot(q, snap=>{
-      // efficient rebuild: create fragment
+    // listen to latest 500 posts (ascending -> older first)
+    const q = query(collection(db, 'posts'), orderBy('timestamp','asc'), limit(500));
+    const unsub = onSnapshot(q, snap=> {
       const frag = document.createDocumentFragment();
-      snap.forEach(docSnap=>{
-        const d=docSnap.data();
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
         const id = docSnap.id;
         const row = document.createElement('div');
-        row.className='msg';
-        const isOwner = d.uid === user.uid;
-        const isAdmin = user.email === 'dejuanj35@gmail.com';
+        row.className = 'msg';
         row.innerHTML = `
           <div><span class="who">@${esc(d.user)}</span>
           <span class="meta">${d.timestamp?.toDate ? new Date(d.timestamp.toDate()).toLocaleString() : ''}</span></div>
           <div style="margin-top:6px">${esc(d.text)}</div>
         `;
+        // controls if owner or admin
+        const isOwner = d.uid === user.uid;
+        const isAdmin = (user.email === 'dejuanj35@gmail.com');
         if(isOwner || isAdmin){
           const controls = document.createElement('div');
-          controls.className='controls';
-          const edit = document.createElement('button'); edit.textContent='Edit';
-          const del = document.createElement('button'); del.textContent='Delete';
+          controls.className = 'controls';
+          const edit = document.createElement('button'); edit.textContent = 'Edit';
+          const del = document.createElement('button'); del.textContent = 'Delete';
           edit.onclick = async ()=> {
             const val = prompt('Edit your message', d.text);
-            if(val && val.trim()!=='' ) await updateDoc(doc(db,'posts',id), { text: val });
+            if(val && val.trim() !== '') await updateDoc(doc(db,'posts',id), { text: val });
           };
           del.onclick = async ()=> {
             if(confirm('Delete message?')) await deleteDoc(doc(db,'posts',id));
@@ -172,14 +163,18 @@
         }
         frag.appendChild(row);
       });
-      // replace feed children
+      // replace and keep scrolled to bottom
+      const shouldScroll = (feed.scrollTop + feed.clientHeight + 80) >= feed.scrollHeight;
       feed.innerHTML = '';
       feed.appendChild(frag);
-      feed.scrollTop = feed.scrollHeight;
+      if(shouldScroll) feed.scrollTop = feed.scrollHeight;
+      else feed.scrollTop = feed.scrollTop; // preserve user scroll
+    }, err => {
+      console.error('onSnapshot error', err);
     });
 
     // send
-    sendBtn.onclick = async ()=>{
+    sendBtn.onclick = async () => {
       const val = input.value.trim();
       if(!val) return;
       await addDoc(collection(db,'posts'), {
@@ -188,19 +183,16 @@
         text: val,
         timestamp: serverTimestamp()
       });
-      input.value='';
+      input.value = '';
     };
 
-    logoutBtn.onclick = async ()=>{ await signOut(auth); location.href='index.html' };
-  });
+    // Enter to send (shift+enter newline)
+    input.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendBtn.click(); }
+    });
 
-  // keyboard send (Enter) — mobile friendly: shift+enter for newline
-  input.addEventListener('keydown', (e)=>{
-    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendBtn.click(); }
+    logoutBtn.onclick = async ()=> { await signOut(auth); location.href = 'index.html'; };
   });
-
-  // graceful fade-in
-  document.addEventListener('DOMContentLoaded', ()=> setTimeout(()=>appWrap.classList.add('visible'),120));
   </script>
 </body>
 </html>
