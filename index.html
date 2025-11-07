@@ -3,230 +3,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Drillions Allum — Login</title>
-  <meta name="theme-color" content="#000000" />
+  <title>Welcome to the Drillions Matrix</title>
   <style>
     :root {
       --neon: #00ff99;
       --dark: #000;
-      --bg-blur: rgba(0, 0, 0, 0.65);
     }
 
-    html, body {
+    body {
       margin: 0;
-      height: 100%;
-      overflow: hidden;
+      height: 100vh;
       background: var(--dark);
       color: var(--neon);
-      font-family: 'Orbitron', monospace;
-      letter-spacing: 0.5px;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
     }
 
     canvas {
       position: fixed;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
-      z-index: -2;
-    }
-
-    .logo-bg {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      opacity: 0.05;
-      width: 60%;
-      max-width: 500px;
       z-index: -1;
-      filter: drop-shadow(0 0 10px #00ff99);
-      animation: pulse 6s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 0.05; filter: drop-shadow(0 0 10px #00ff99); }
-      50% { opacity: 0.12; filter: drop-shadow(0 0 25px #00ffaa); }
-    }
-
-    .center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      width: 90%;
-      max-width: 420px;
     }
 
     h1 {
-      font-size: 2rem;
-      text-shadow: 0 0 12px var(--neon);
-      margin-bottom: 12px;
+      font-size: 2.2em;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px var(--neon);
+      animation: flicker 3s infinite alternate;
     }
 
-    p.tag {
-      font-size: 0.9rem;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 24px;
+    @keyframes flicker {
+      0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        text-shadow:
+          0 0 4px var(--neon),
+          0 0 10px var(--neon),
+          0 0 20px var(--neon),
+          0 0 40px #00ffaa;
+      }
+      20%, 24%, 55% {
+        text-shadow: none;
+      }
     }
 
-    .card {
-      background: var(--bg-blur);
-      border: 1px solid rgba(0,255,153,0.1);
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 0 14px rgba(0,255,153,0.1);
-      backdrop-filter: blur(10px);
-    }
-
-    input {
-      width: 100%;
+    .entry-button {
+      margin-top: 30px;
+      font-size: 0.9em;
       background: transparent;
-      border: 1px solid rgba(0,255,153,0.15);
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 10px;
-      color: var(--neon);
-      outline: none;
-      font-family: inherit;
-    }
-
-    button {
-      width: 100%;
-      background: var(--neon);
-      border: none;
-      color: #000;
-      font-weight: 700;
-      padding: 10px;
-      border-radius: 8px;
+      border: 1px solid rgba(0,255,153,0.2);
+      color: rgba(0,255,153,0.7);
+      padding: 8px 20px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 10px rgba(0,255,153,0.3);
-    }
-
-    .alt {
-      margin-top: 10px;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.5);
-    }
-
-    .alt a {
+    .entry-button:hover {
+      background: rgba(0,255,153,0.1);
       color: var(--neon);
-      text-decoration: none;
-      font-weight: 600;
+      border-color: var(--neon);
+      box-shadow: 0 0 10px rgba(0,255,153,0.4);
     }
 
     footer {
       position: absolute;
-      bottom: 10px;
-      width: 100%;
-      text-align: center;
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.3);
+      bottom: 20px;
+      font-size: 0.75em;
+      color: rgba(0,255,153,0.4);
     }
   </style>
 </head>
 <body>
   <canvas id="matrix"></canvas>
 
-  <!-- LOGO BACKGROUND -->
-  <img src="assets/drillions_logo.png" alt="Drillions Logo" class="logo-bg" />
+  <h1>Welcome to the Drillions Matrix</h1>
+  <button class="entry-button" onclick="enterMatrix()">Access Portal</button>
 
-  <div class="center">
-    <h1>DRILLIONS ALLUM</h1>
-    <p class="tag">Focus • Discipline • Creation</p>
-    <div class="card">
-      <input type="email" id="email" placeholder="Email" />
-      <input type="password" id="password" placeholder="Password" />
-      <button id="loginBtn">Continue</button>
-      <div class="alt">
-        New here? <a href="#" id="signupLink">Create account</a>
-      </div>
-    </div>
-  </div>
+  <footer>© 2025 Drillions Allum — Enter with Focus</footer>
 
-  <footer>© 2025 Drillions Allum. All Rights Reserved.</footer>
+  <script>
+    // MATRIX BACKGROUND
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-  <script type="module">
-    // MATRIX ANIMATION
-    const canvas = document.getElementById('matrix');
-    const ctx = canvas.getContext('2d');
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
-
-    const letters = "DRILLIONS01010101";
-    const fontSize = 14;
-    const columns = Math.floor(width / fontSize);
-    const drops = Array(columns).fill(1);
+    const letters = "DRILLIONS MATRIX 01010101";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
 
     function draw() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#00ff99";
-      ctx.font = `${fontSize}px monospace`;
+      ctx.font = fontSize + "px monospace";
       for (let i = 0; i < drops.length; i++) {
         const text = letters.charAt(Math.floor(Math.random() * letters.length));
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-        if (drops[i] * fontSize > height && Math.random() > 0.975) drops[i] = 0;
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
       }
-      requestAnimationFrame(draw);
     }
-    draw();
+    setInterval(draw, 35);
 
-    window.addEventListener('resize', () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     });
 
-    // FIREBASE AUTH (connects to your same config)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBujCcMRMq0UEUkU7oJsyOzg0AwAO0NNdY",
-      authDomain: "drillionscomments.firebaseapp.com",
-      projectId: "drillionscomments",
-      storageBucket: "drillionscomments.firebasestorage.app",
-      messagingSenderId: "1007277277571",
-      appId: "1:1007277277571:web:343c8dd68b844ec91e76b6"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
-    const loginBtn = document.getElementById('loginBtn');
-    const signupLink = document.getElementById('signupLink');
-
-    loginBtn.onclick = async () => {
-      try {
-        await signInWithEmailAndPassword(auth, email.value, password.value);
-        window.location.href = 'social.html';
-      } catch (err) {
-        alert('Invalid login or password');
-      }
-    };
-
-    signupLink.onclick = async (e) => {
-      e.preventDefault();
-      try {
-        await createUserWithEmailAndPassword(auth, email.value, password.value);
-        alert('Welcome! Account created.');
-        window.location.href = 'social.html';
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    };
+    // Redirect to login
+    function enterMatrix() {
+      window.location.href = "login.html";
+    }
   </script>
 </body>
 </html>
